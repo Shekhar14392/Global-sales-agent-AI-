@@ -1,0 +1,2765 @@
+{
+  "name": "Global AI Sales Agent with Lead Qualification and Automated Proposals",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "global-ai-sales-agent",
+        "options": {}
+      },
+      "id": "2f4890d0-c946-4f46-abae-348b4cdec872",
+      "name": "New Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -11664
+      ],
+      "webhookId": "8a514dcd-bbf3-46a9-bec8-6661727bada9"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ekqy4Skjw0Ia9Nl"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.body.name }}",
+            "Email": "={{ $json.body.email }}",
+            "Phone": "={{ $json.body.phone }}",
+            "Country": "={{ $json.body.country ?? \"\" }}",
+            "Language": "={{ $json.body.language ?? \"\" }}",
+            "Message": "={{ $json.body.message ?? \"\" }}",
+            "Status": "New Lead",
+            "Created_Date": "={{ $now.toISO() }}"
+          },
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Language",
+              "displayName": "Language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created_Date",
+              "displayName": "Created_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d88b231e-74b5-42e1-a652-e90ada09d0c7",
+      "name": "Save Lead to CRM Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -64,
+        -11664
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ekqy4Skjw0Ia9Nl"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Products"
+        },
+        "options": {}
+      },
+      "id": "1963ba68-5d60-4d6d-9eee-2b4cd098f505",
+      "name": "Fetch Product Knowledge",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        160,
+        -11664
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this lead inquiry and provide a structured assessment.\n\nLead Information:\nName: {{ $(\"New Lead Webhook\").item.json.body.name }}\nEmail: {{ $(\"New Lead Webhook\").item.json.body.email }}\nCountry: {{ $(\"New Lead Webhook\").item.json.body.country }}\nLanguage: {{ $(\"New Lead Webhook\").item.json.body.language }}\nMessage: {{ $(\"New Lead Webhook\").item.json.body.message }}\n\nAvailable Products:\n{{ $(\"Fetch Product Knowledge\").all().map(p => p.json.Product_Name + \" (\" + p.json.Category + \"): \" + p.json.Description + \" - \" + p.json.Price + \" - Package: \" + p.json.Package).join(\"\\n\") }}\n\nAnalyze the lead to determine:\n1. Lead Score (0-100)\n2. Interest Level (high/medium/low)\n3. Customer Intent\n4. Recommended Product\n5. Next Action",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a global sales AI that analyzes customer inquiries in any language. Provide structured assessment of lead quality, customer intent, and product recommendations."
+        }
+      },
+      "id": "9759f398-16a2-4f4c-b7b7-6367fe5bea01",
+      "name": "AI Lead Analyzer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        -11664
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "2c7ee915-b696-4fd6-85f1-605b2b56c8d7",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        -11440
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "mOdAjbqVVD0WUmSY",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": {
+          "leadScore": 85,
+          "interestLevel": "high",
+          "detectedLanguage": "en",
+          "suggestedPackage": "Premium Package",
+          "reasoning": "Customer shows strong buying intent with specific package mention"
+        }
+      },
+      "id": "91f9c272-9ad8-4f9e-bd63-9d1768bc883d",
+      "name": "Lead Score Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        -11440
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.output.leadScore }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1d0cf6f-25fb-4767-b4a5-0ef8cf310717",
+      "name": "Check Lead Quality",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        -11664
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a personalized sales proposal in {{ $(\"New Lead Webhook\").item.json.body.language }} language.\n\nCustomer: {{ $(\"New Lead Webhook\").item.json.body.name }}\nCountry: {{ $(\"New Lead Webhook\").item.json.body.country }}\nLanguage: {{ $(\"New Lead Webhook\").item.json.body.language }}\nTheir inquiry: {{ $(\"New Lead Webhook\").item.json.body.message }}\nRecommended product: {{ $(\"AI Lead Analyzer\").item.json.output.suggestedPackage }}\n\nProduct details:\n{{ $(\"Fetch Product Knowledge\").all().filter(p => p.json.Product_Name === $(\"AI Lead Analyzer\").item.json.output.suggestedPackage).map(p => \"Product: \" + p.json.Product_Name + \"\\nCategory: \" + p.json.Category + \"\\nDescription: \" + p.json.Description + \"\\nPrice: \" + p.json.Price + \"\\nFeatures: \" + p.json.Features + \"\\nPackage: \" + p.json.Package).join(\"\\n\") }}\n\nCreate a compelling, personalized proposal that:\n1. Addresses their specific needs\n2. Highlights relevant features\n3. Includes pricing and payment options\n4. Provides clear next steps\n5. Is written in their native language",
+        "options": {
+          "systemMessage": "You are a global sales expert who creates personalized proposals in the customer's native language. Support all countries and languages. Be professional, persuasive, and customer-focused."
+        }
+      },
+      "id": "10c9b2c1-e533-4799-9482-77690c2db21e",
+      "name": "Generate Personalized Proposal",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        960,
+        -11616
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "cee70e4d-f575-48b9-8e31-52d9314d8088",
+      "name": "Proposal Generator Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        -11392
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "mOdAjbqVVD0WUmSY",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('New Lead Webhook').item.json.body.email }}",
+        "subject": "=Your Personalized {{ $(\"AI Lead Analyzer\").item.json.output.suggestedPackage }} Proposal",
+        "message": "={{ $json.output }}",
+        "options": {
+          "senderName": "Global AI Sales Team"
+        }
+      },
+      "id": "0a95a999-0dda-4ae5-aca1-06990cc1455e",
+      "name": "Send Proposal Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -11504
+      ],
+      "webhookId": "c8550ca1-3f9b-4e93-a2e6-e888427acc9a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "InDi4hSv8bZKU6KQ",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "start": "={{ $now.plus(2, \"days\").set({ hour: 14, minute: 0 }).toISO() }}",
+        "end": "={{ $now.plus(2, \"days\").set({ hour: 14, minute: 30 }).toISO() }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $('New Lead Webhook').item.json.body.email }}"
+          ],
+          "description": "=Follow-up meeting for {{ $(\"AI Lead Analyzer\").item.json.output.suggestedPackage }} proposal\n\nLead Score: {{ $(\"AI Lead Analyzer\").item.json.output.leadScore }}\nInterest Level: {{ $(\"AI Lead Analyzer\").item.json.output.interestLevel }}\nCustomer Intent: {{ $(\"AI Lead Analyzer\").item.json.output.reasoning }}\n\nGlobal AI Sales Agent",
+          "sendUpdates": "all",
+          "summary": "=Sales Meeting - {{ $(\"New Lead Webhook\").item.json.body.name }}"
+        }
+      },
+      "id": "eb60ab26-56ca-427c-adb4-2b641cf1c773",
+      "name": "Schedule Follow-up Meeting",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1536,
+        -11504
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "25rZQuzN3FQq14Jr",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ekqy4Skjw0Ia9Nl"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead_Score": "={{ $(\"AI Lead Analyzer\").item.json.output.leadScore }}",
+            "Interest_Level": "={{ $(\"AI Lead Analyzer\").item.json.output.interestLevel }}",
+            "Status": "Proposal Sent",
+            "Proposal_Status": "Sent",
+            "Meeting_Status": "Scheduled"
+          },
+          "schema": [
+            {
+              "id": "Lead_Score",
+              "displayName": "Lead_Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interest_Level",
+              "displayName": "Interest_Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Proposal_Status",
+              "displayName": "Proposal_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meeting_Status",
+              "displayName": "Meeting_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bb0ab4a5-4e0b-42a0-8526-ddfddf72d467",
+      "name": "Update Sheet - Proposal Sent",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1760,
+        -11504
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "charge",
+        "operation": "getAll",
+        "returnAll": true
+      },
+      "id": "dfcb284d-fdc4-4420-8993-d95659448dfb",
+      "name": "Verify Payment",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        -12208
+      ],
+      "credentials": {
+        "stripeApi": {
+          "id": "ccE6XMPP96jFZh0j",
+          "name": "Stripe account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('New Lead Webhook').item.json.body.email }}",
+        "subject": "=Thank you for your interest - {{ $(\"New Lead Webhook\").item.json.body.name }}",
+        "message": "=<p>Dear {{ $(\"New Lead Webhook\").item.json.body.name }},</p>\n\n<p>Thank you for reaching out to us. We received your inquiry and would love to help you find the perfect solution.</p>\n\n<p>Based on your message, we think you might be interested in learning more about our solutions. Our team will review your request and get back to you within 24 hours with more information.</p>\n\n<p>In the meantime, feel free to explore our website or reply to this email with any questions.</p>\n\n<p>Best regards,<br>Sales Team</p>",
+        "options": {
+          "senderName": "Global AI Sales Team"
+        }
+      },
+      "id": "c086007c-c0bb-4164-8e08-969e4f4713c0",
+      "name": "Send Nurturing Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        -11952
+      ],
+      "webhookId": "ff1438e8-916a-4c64-8544-6d57b81d5d0b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jENqLDBNqfDGnU8X",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ekqy4Skjw0Ia9Nl"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead_Score": "={{ $(\"AI Lead Analyzer\").item.json.output.leadScore }}",
+            "Interest_Level": "={{ $(\"AI Lead Analyzer\").item.json.output.interestLevel }}",
+            "Status": "Nurturing"
+          },
+          "schema": [
+            {
+              "id": "Lead_Score",
+              "displayName": "Lead_Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interest_Level",
+              "displayName": "Interest_Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f9818b0b-adcf-40e1-8472-91f5431050cf",
+      "name": "Update Sheet - Nurturing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        -11936
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "phoneNumberId": "1168451079683333",
+        "recipientPhoneNumber": "={{ $(\"New Lead Webhook\").item.json.body.phone }}",
+        "message": "=Hello {{ $(\"New Lead Webhook\").item.json.body.name }}, your payment for {{ $(\"AI Lead Analyzer\").item.json.output.suggestedPackage }} has been successfully confirmed! Our team will contact you shortly. Thank you for choosing MYRA AI!",
+        "approvalOptions": {
+          "values": {}
+        },
+        "options": {
+          "appendAttribution": true
+        }
+      },
+      "id": "84b4a2de-4e78-424a-a051-effa33749bba",
+      "name": "Send WhatsApp Confirmation",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2384,
+        -11952
+      ],
+      "webhookId": "2641a4d8-7df2-4751-9814-c673bb2d3e5d",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "C1iQgf0q3eWl6Zo3",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+15863263356",
+        "to": "={{ $(\"New Lead Webhook\").item.json.body.phone }}",
+        "twiml": true,
+        "message": "=<Response><Say voice=\"Polly.Joanna\" language=\"en-US\">Hello {{ $(\"New Lead Webhook\").item.json.body.name }}, this is a confirmation call. Your payment for {{ $(\"AI Lead Analyzer\").item.json.output.suggestedPackage }} has been successfully processed. Our team will contact you shortly to begin your onboarding. Thank you for choosing us!</Say></Response>",
+        "options": {}
+      },
+      "id": "3281bbeb-715d-4d62-b374-1f590366a69e",
+      "name": "Make Voice Call",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        -11760
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "O8wP1wNRseQYhGKR",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1ekqy4Skjw0Ia9Nl",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Payment Confirmed",
+            "Payment_Status": "Paid"
+          },
+          "matchingColumns": [
+            "Payment_Status"
+          ],
+          "schema": [
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment_Status",
+              "displayName": "Payment_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2ee44399-d0e3-4119-9ecf-e9cdb66322c7",
+      "name": "Update Sheet - Payment Confirmed",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2656,
+        -11792
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "backgroundColor": "#0066cc",
+        "width": 512,
+        "height": 512,
+        "options": {
+          "destinationKey": "logo",
+          "fileName": "company-logo.png",
+          "format": "png"
+        }
+      },
+      "id": "71ea7aaf-6745-43a9-97aa-81a474921d8f",
+      "name": "Create Logo Image",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -11168
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "dataPropertyName": "logo",
+        "text": "MYRA AI",
+        "fontSize": 72,
+        "fontColor": "#ffffff",
+        "positionX": 120,
+        "positionY": 200,
+        "lineLength": 15,
+        "options": {
+          "destinationKey": "logo",
+          "fileName": "myra-ai-logo.png",
+          "font": "Arial",
+          "format": "png"
+        }
+      },
+      "id": "973622e7-f1ef-4436-bea9-76193cb62b2e",
+      "name": "Add Logo Text",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -11040
+      ]
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "logo",
+        "name": "myra-ai-logo.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {
+          "simplifyOutput": true
+        }
+      },
+      "id": "8bf7d0ce-e1e8-4df1-8432-65a148bb6c7f",
+      "name": "Upload Logo to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        336,
+        -11088
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "pRuCis7fBDJ750Fe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "d6f93c31-34af-47fc-846b-dac6e7a431ad",
+      "name": "🚀 All-in-One Setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -11088
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ekqy4Skjw0Ia9Nl"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Products"
+        },
+        "options": {}
+      },
+      "id": "ceb3f0ca-8045-4c30-ad32-f8721c8e078d",
+      "name": "Add Sample Products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        -10704
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xIhgqRmYxv7P5qUR",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "```javascript\n[\n  {\n    \"configKey\": \"automated_payment_processing\",\n    \"configValue\": \"enabled\"\n  },\n  {\n    \"configKey\": \"automated_scheduling_and_booking\",\n    \"configValue\": \"enabled\"\n  },\n  {\n    \"configKey\": \"project_execution_engine\",\n    \"configValue\": \"active\"\n  },\n  {\n    \"configKey\": \"swipe_integration\",\n    \"configValue\": \"enabled\"\n  },\n  {\n    \"configKey\": \"company_name\",\n    \"configValue\": \"S.S.C. Global AI Agent\"\n  },\n  {\n    \"bank_details\": [\n      {\n        \"Bank\": \"Central Bank of India\",\n        \"Account Name\": \"Mr. Chakali Shekhar\",\n        \"Account Number\": \"5802056149\",\n        \"IFSC Code\": \"CBIN0285088\",\n        \"Address\": \"H NO.10-67/34, VEMUKUNTA, CHANDANAGAR, RANGAREDDY, TELANGANA - 500019\"\n      },\n      {\n        \"Bank\": \"UCO Bank\",\n        \"Account Name\": \"Chakali Shekhar\",\n        \"Account Number\": \"12350110119747\",\n        \"IFSC Code\": \"UCBA0001239\",\n        \"Branch Name\": \"Patancheru\",\n        \"Address\": \"12-1, Susheelam Complex, Shanthinagar, Patancheru-502319, Medak Dist, Hyderabad - 502319\"\n      }\n    ]\n  }\n]\n\n``"
+      },
+      "id": "74465308-7368-4069-86e8-2a57a289282b",
+      "name": "Initialize Config Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -11072
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { accountType: \"Stripe\", accountId: \"acct_XXXXXX\", accountEmail: \"shekors143@gmail.com\", withdrawalEnabled: true, currency: \"INR\", country: \"India\", status: \"pending_setup\", notes: \"UPDATE with your Stripe account ID\" },\n  { accountType: \"Razorpay\", accountId: \"rzp_XXXXXX\", accountEmail: \"shekors143@gmail.com\", withdrawalEnabled: true, currency: \"INR\", country: \"India\", status: \"pending_setup\", notes: \"UPDATE with your Razorpay account ID\" },\n  { accountType: \"PayPal\", accountId: \"shekors143@gmail.com\", accountEmail: \"shekors143@gmail.com\", withdrawalEnabled: false, currency: \"USD\", country: \"India\", status: \"optional\", notes: \"Optional - for international payments\" }\n];"
+      },
+      "id": "c2dc0173-46de-429f-8c59-0e05c7f2d3fd",
+      "name": "Initialize Payment Accounts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -10864
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { sopTitle: \"Lead Management Process\", sopContent: \"1. Receive lead via webhook\\n2. Save to CRM Sheet\\n3. Fetch product knowledge\\n4. AI analyzes lead quality\\n5. Route based on interest level\\n6. High interest: Send proposal + schedule meeting\\n7. Low/Medium: Send nurturing email\", version: \"1.0\", language: \"All Indian Languages\", lastUpdated: new Date().toISOString(), owner: \"Sales Team\", category: \"Lead Management\" },\n  { sopTitle: \"Payment Confirmation Process\", sopContent: \"1. Verify payment via Stripe\\n2. Send WhatsApp confirmation\\n3. Make voice call confirmation\\n4. Update CRM Sheet status\\n5. Trigger onboarding workflow\", version: \"1.0\", language: \"All Indian Languages\", lastUpdated: new Date().toISOString(), owner: \"Sales Team\", category: \"Payment Processing\" },\n  { sopTitle: \"Multi-Language Support\", sopContent: \"1. AI detects customer language automatically\\n2. Generate responses in detected language\\n3. Supported: Hindi, English, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Urdu\\n4. Voice calls use appropriate language/accent\", version: \"1.0\", language: \"All Indian Languages\", lastUpdated: new Date().toISOString(), owner: \"Technical Team\", category: \"Localization\" },\n  { sopTitle: \"Ad Campaign Management\", sopContent: \"1. Create campaigns via Google Ads API\\n2. Track in ad-campaigns table\\n3. Monitor performance daily\\n4. Adjust budget based on ROI\\n5. A/B test ad copy in multiple languages\", version: \"1.0\", language: \"All Indian Languages\", lastUpdated: new Date().toISOString(), owner: \"Marketing Team\", category: \"Advertising\" },\n  { sopTitle: \"App Version Updates\", sopContent: \"1. Update app_version in app-config table\\n2. Trigger app update notification\\n3. Test in staging environment\\n4. Roll out to production\\n5. Monitor for issues\\n6. Rollback if needed\", version: \"1.0\", language: \"All Indian Languages\", lastUpdated: new Date().toISOString(), owner: \"Technical Team\", category: \"DevOps\" }\n];"
+      },
+      "id": "edfc52ce-3a03-4c3c-b37d-7c05339fd66b",
+      "name": "Initialize SOPs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -10992
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const spreadsheetUrl = $(\"Create CRM Spreadsheet\").first().json.spreadsheetUrl;\nconst logoUrl = $(\"Upload Logo to Drive\").first().json.webContentLink;\n\nreturn [{\n  status: \"success\",\n  message: \"🎉 All-in-One Setup Complete!\",\n  summary: {\n    crm_spreadsheet: spreadsheetUrl,\n    logo_url: logoUrl,\n    configs_created: 12,\n    payment_accounts_initialized: 3,\n    sops_created: 5,\n    data_tables: [\"app-config\", \"payment-accounts\", \"sop-documents\", \"ad-campaigns\"]\n  },\n  next_steps: [\n    \"1. Open CRM Spreadsheet and add your products to the Products sheet\",\n    \"2. Update app-config table with your actual website URL, phone numbers, and WhatsApp Phone ID\",\n    \"3. Configure payment accounts in payment-accounts table with real account IDs\",\n    \"4. Connect all required credentials: OpenAI, Google Sheets, Gmail, WhatsApp, Twilio, Stripe\",\n    \"5. Test the workflow by sending a test lead to the webhook\",\n    \"6. Customize logo by editing the Add Logo Text node and re-running setup\",\n    \"7. Review and customize SOPs in sop-documents table\"\n  ],\n  credentials_needed: [\n    \"OpenAI API\",\n    \"Google Sheets OAuth2\",\n    \"Google Calendar OAuth2\",\n    \"Gmail OAuth2\",\n    \"Google Drive OAuth2\",\n    \"WhatsApp Business Cloud\",\n    \"Twilio\",\n    \"Stripe\",\n    \"Google Ads OAuth2 (optional)\"\n  ],\n  webhook_url: \"Configure in New Lead Webhook node\",\n  india_ready: true,\n  languages_supported: \"Hindi, English, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Urdu\"\n}];"
+      },
+      "id": "1d02c49a-de17-4345-9455-ef5e0d4b5792",
+      "name": "✅ Setup Complete Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -10992
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "sop-documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sopTitle": "={{ $json.sopTitle }}",
+            "sopContent": "={{ $json.sopContent }}",
+            "version": "={{ $json.version }}",
+            "language": "={{ $json.language }}",
+            "lastUpdated": "={{ $json.lastUpdated }}",
+            "owner": "={{ $json.owner }}",
+            "category": "={{ $json.category }}"
+          },
+          "schema": [
+            {
+              "id": "sopTitle",
+              "displayName": "sopTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sopContent",
+              "displayName": "sopContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lastUpdated",
+              "displayName": "lastUpdated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7cd9fd7c-32bf-4ece-ae56-83fa310bce8a",
+      "name": "Store SOP Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        -11040
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3d089126-a8b7-4557-a13c-a30b0f78b2b1",
+      "name": "Process Each SOP",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        -10880
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "payment-accounts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "accountType": "={{ $json.accountType }}",
+            "accountId": "={{ $json.accountId }}",
+            "accountEmail": "={{ $json.accountEmail }}",
+            "withdrawalEnabled": "={{ $json.withdrawalEnabled }}",
+            "currency": "={{ $json.currency }}",
+            "country": "={{ $json.country }}",
+            "status": "={{ $json.status }}",
+            "notes": "={{ $json.notes }}"
+          },
+          "schema": [
+            {
+              "id": "accountType",
+              "displayName": "accountType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accountId",
+              "displayName": "accountId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accountEmail",
+              "displayName": "accountEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "withdrawalEnabled",
+              "displayName": "withdrawalEnabled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "43c5f209-3804-49ee-a7d2-32ec0cd89251",
+      "name": "Store Payment Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1504,
+        -11184
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "12a73e85-7a55-4796-9138-2a9f887b84cb",
+      "name": "Process Each Payment Account",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1248,
+        -10928
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "app-config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "configKey": "={{ $json.configKey }}",
+            "configValue": "={{ $json.configValue }}",
+            "description": "={{ $json.description }}"
+          },
+          "schema": [
+            {
+              "id": "configKey",
+              "displayName": "configKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "configValue",
+              "displayName": "configValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "771614c5-97db-4732-8aef-4bac9b437fe7",
+      "name": "Store Config Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        -11184
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ 1 }}",
+        "options": {}
+      },
+      "id": "b8a471e3-b76f-4c49-928c-41913ed61bb5",
+      "name": "Process Each Config",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        832,
+        -11040
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 All-in-One Setup\n\n**Click \"Test workflow\" to automatically:**\n1. ✅ Create SalesCRM Google Spreadsheet with Leads & Products sheets\n2. ✅ Add sample products to get started\n3. ✅ Generate company logo and upload to Google Drive\n4. ✅ Initialize app-config table with 12 configuration entries\n5. ✅ Set up payment accounts (Stripe, Razorpay, PayPal)\n6. ✅ Create 5 standard operating procedures\n7. ✅ Display complete setup summary with next steps\n\n**After Setup:**\n- Update placeholders in app-config table\n- Add your products to the Products sheet\n- Configure real payment account IDs\n- Connect all required credentials\n- Test the lead workflow",
+        "height": 95176,
+        "width": 150,
+        "color": 2
+      },
+      "id": "61e8df4d-73e4-4803-9d66-c482cb6c1e8d",
+      "name": "Sticky Note Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40352,
+        -13808
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 What Gets Created\n\n**Google Spreadsheet:**\n- SalesCRM with Leads & Products sheets\n- Pre-configured columns for lead tracking\n- Sample products included\n\n**Data Tables:**\n- app-config: 12 configuration entries\n- payment-accounts: 3 payment providers\n- sop-documents: 5 SOPs\n- ad-campaigns: Ready for ad tracking\n\n**Assets:**\n- Company logo (customizable)\n- Uploaded to Google Drive\n- Public URL stored in config\n\n**Multi-Language Ready:**\n- 11 Indian languages supported\n- Hindi, English, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Urdu",
+        "height": 36648,
+        "width": 4964,
+        "color": 3
+      },
+      "id": "fa0049f2-7288-4194-9b8b-ab7f42ec81a1",
+      "name": "Sticky Note Created",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10720,
+        138480
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Next Steps After Setup\n\n**1. Update Configurations:**\n- Open app-config table\n- Update website_url, support_email, support_phone\n- Add WhatsApp Phone Number ID\n- Add Twilio phone number\n\n**2. Configure Withdrawal Accounts:**\n- Open payment-accounts table\n- Update bank account number and IFSC code\n- Update UPI ID for instant withdrawals\n\n**3. Add Your Products:**\n- Open the created Google Spreadsheet\n- Go to Products sheet\n- Add/edit your actual products and pricing\n\n**4. Connect Credentials:**\n- All nodes marked with placeholders\n- Connect OAuth2 for Google services\n- Add API keys for OpenAI, WhatsApp, Twilio\n\n**5. Test the Workflow:**\n- Send test lead to webhook\n- Verify AI analysis works\n- Check email/WhatsApp delivery\n- Verify wallet transactions are recorded",
+        "height": 80,
+        "width": 150,
+        "color": 5
+      },
+      "id": "7ac78d12-cae8-4dca-b8f5-9dee1e50f109",
+      "name": "Sticky Note Next Steps",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        -6672
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📋 Global AI Sales Agent Configuration\n\n**Webhook Path:** /global-ai-sales-agent\n**Method:** POST\n\n**Required Credentials:**\n1. **OpenAI** - AI analysis (all languages)\n2. **Google Sheets** - SalesCRM spreadsheet\n3. **Google Calendar** - Meeting scheduling\n4. **Gmail** - Email proposals\n5. **WhatsApp Business** - Payment confirmations\n6. **Twilio** - Voice calls\n\n**Wallet System:**\n- All payments recorded in wallet-transactions Data Table\n- No Stripe or payment gateway needed\n- Manual payment recording (UPI/Bank/Cash)\n- Withdraw to your account anytime\n- Real-time balance tracking\n- Transaction history with customer details\n\n**Google Sheet: SalesCRM**\n\n**Leads Sheet Columns:**\nLead_ID, Name, Email, Phone, Country, Language, Message, Lead_Score, Interest_Level, Status, Proposal_Status, Meeting_Status, Payment_Status, Created_Date\n\n**Products Sheet Columns:**\nProduct_Name, Category, Description, Features, Price, Package\n\n**Payments Sheet Columns:**\nPayment_ID, Customer_Name, Email, Amount, Currency, Status, Date\n\n**Workflow Logic:**\n- Lead Score > 70 → Qualified Lead (Proposal + Meeting)\n- Lead Score ≤ 70 → Nurturing (Follow-up Email)\n\n**Global Support:**\n- All countries supported\n- All languages supported\n- Automatic translation\n- Native language communication\n\n**Meeting Settings:**\n- Calendar: Primary\n- Duration: 30 Minutes\n- Timezone: Asia/Kolkata",
+        "height": 864,
+        "width": 11908,
+        "color": 4
+      },
+      "id": "33a2a71d-b804-4055-b4fb-12bd53145120",
+      "name": "Sticky Note Config",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11632,
+        -4576
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+15863263356",
+        "to": "={{ $('New Lead Webhook').first().json.phone }}",
+        "twiml": true,
+        "message": "Hello! This is an automated assistant calling from Global AI Sales Agency. We noticed you recently showed interest in our services. Please let us know if you have any questions, or if you would like to schedule a brief call to discuss how we can help your business grow.\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        -11616
+      ],
+      "id": "2465829f-ddf4-4b60-8ce1-47cf8f97ef9a",
+      "name": "Make a call",
+      "credentials": {
+        "twilioApi": {
+          "id": "O8wP1wNRseQYhGKR",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.stripe.com/v1/payment_intents\n",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {},
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"accountno\": \"test@gmail.com\",\n  \"amount\": 1000,\n  \"description\": \"test this endpoint\",7128354592\n  \"merchantid\": \"123456789012345678\",\n  \"tranpin\": \"12345\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2064,
+        -11696
+      ],
+      "id": "ab569fad-5676-4eb4-af7a-dbce75e04599",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+15863263356",
+        "to": "={{ $('New Lead Webhook').first().json.phone }}",
+        "twiml": true,
+        "message": "Hello! This is an automated assistant calling from Global AI Sales Agency. We noticed you recently showed interest in our services. Please let us know if you have any questions, or if you would like to schedule a brief call to discuss how we can help your business grow.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        -12016
+      ],
+      "id": "92d808a5-71a5-4146-ade9-dc4c57c9ac34",
+      "name": "Make a call1",
+      "credentials": {
+        "twilioApi": {
+          "id": "O8wP1wNRseQYhGKR",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "height": 12368,
+        "width": 9072
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -8192,
+        11648
+      ],
+      "typeVersion": 1,
+      "id": "8aca8c0c-20e7-47b6-9c06-448ae1731344",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "height": 75312,
+        "width": 2032
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4192,
+        29248
+      ],
+      "typeVersion": 1,
+      "id": "efdec757-9a43-4917-b157-d5e3e437e729",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "page": {
+          "__rl": true,
+          "value": "4561754907426319",
+          "mode": "id"
+        },
+        "form": {
+          "__rl": true,
+          "value": "38562591d5c8427608b299d979b8ebae",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookLeadAdsTrigger",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -11104
+      ],
+      "id": "e048473d-e96a-4cfe-87fc-655d89564ee3",
+      "name": "Facebook Lead Ads Trigger",
+      "webhookId": "bdcd350e-57d0-41fa-b3b8-192620f023d6",
+      "credentials": {
+        "facebookLeadAdsOAuth2Api": {
+          "id": "1rsVwohjqvqimN4M",
+          "name": "Facebook Lead Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "appId": "EABA05FTPPg8BRqHYKNp0CYAGmqLY47dyuW4aAMFfp5DYGZB2OUbP1e2Oq4DBOj2GZASGxUAvPq3qzK7apdoG1MwYmQ4B5BZBpvqIVZBGt0rVQO235B7z0ZCcCYxSvASyqTlv4W87PAQpAGJIu5cysZC5YsUUfuAT5HToGUhZBR9yDg1FMIfuKEIRUg55RWJZCbtj2odilfwu02W4ZBGtNYIwjtrrp7q8C4Reot5M2",
+        "object": "page",
+        "fields": [
+          "leadgen"
+        ],
+        "options": {
+          "includeValues": true
+        }
+      },
+      "type": "n8n-nodes-base.facebookTrigger",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -11040
+      ],
+      "id": "81e7bf84-8a84-412a-a6d0-2cdb981e15ef",
+      "name": "Facebook Trigger",
+      "webhookId": "4575a2a8-a1db-471f-969a-8eb92418bdb1",
+      "credentials": {
+        "facebookGraphAppApi": {
+          "id": "GCxmdWKtWJaFIB73",
+          "name": "Facebook Graph (App) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "node": "Process incoming marketing leads, manage ad campaigns, and automate customer communications globally and across India.\n",
+        "imageUrl": "This is the \"Edit Image URL\" dialog box in the n8n platform. Here you can enter the image URL.\n",
+        "caption": "Here's a refined version: Automate your global and India-wide marketing efforts by seamlessly processing incoming leads, managing ad campaigns, and handling customer communications.\n",
+        "additionalFields": {}
+      },
+      "type": "@mookielianhd/n8n-nodes-instagram.instagram",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        -11104
+      ],
+      "id": "07ae49cf-5c98-43ce-85ff-f6bd04634516",
+      "name": "Publish",
+      "credentials": {
+        "instagramApi": {
+          "id": "BF0b4sqrSqhf97X2",
+          "name": "Instagram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2896,
+        -11072
+      ],
+      "id": "db71b6ac-1778-4bb2-bd21-a65c55045059",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "text": "This tool is used to run marketing ads, generate leads, and handle customer interactions and communications.\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        2816,
+        -10784
+      ],
+      "id": "28bd818a-033d-4c3e-8619-9b35f28098f7",
+      "name": "AI Agent Tool"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        1200,
+        -11312
+      ],
+      "id": "84757525-3c81-44ad-a4a1-9f261aafb487",
+      "name": "Postgres Chat Memory",
+      "notesInFlow": true,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "ucP5ongZK17shTOk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        -10560
+      ],
+      "id": "5a4acdc3-a3f9-4fc6-ab40-a631626d3526",
+      "name": "Google Vertex Chat Model",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "{{ $json.reply",
+              "hideFromUI": true
+            },
+            {
+              "type": "ai",
+              "message": "{{ $json.reply",
+              "hideFromUI": true
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        -10800
+      ],
+      "id": "1b08aa50-e2b8-4743-b711-8d59c2b17fe1",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "person": "=🚀 Supercharging our growth with n8n and AI!\nWe’ve fully automated our marketing and sales engine. Our AI agents are now generating high-quality leads, handling our marketing automation, and even running targeted ad campaigns seamlessly.\nSay hello to precision and efficiency in lead generation! 📈💼✨\n",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "type": "n8n-nodes-base.linkedInTool",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        -10480
+      ],
+      "id": "d28ec7a9-9b16-48cc-b3fb-7f8eb67aabe7",
+      "name": "Create a post in LinkedIn",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "1jmTkwXgCRac9c6s",
+          "name": "LinkedIn OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        -11760
+      ],
+      "id": "5acd6f3e-b019-4eb8-a9d9-5978bb126cb1",
+      "name": "Chat Memory Manager1"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2704,
+        -10240
+      ],
+      "id": "4d025e90-3b83-4c1a-a65e-eb225cecd159",
+      "name": "Google Vertex Chat Model1",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "global_sales_session"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        16,
+        -10464
+      ],
+      "id": "3de6f205-b8d9-4eae-b9f4-6ef8e4d2d0c2",
+      "name": "Postgres Chat Memory1",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ucP5ongZK17shTOk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "Analyze the customer's message, match their communication style and tone, and provide a helpful response accordingly.\n",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        2976,
+        -10272
+      ],
+      "id": "d0e6e5d4-6469-4422-99be-de079c7edfdf",
+      "name": "AI Agent Tool1"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {
+          "maxOutputTokens": 220
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2976,
+        -10000
+      ],
+      "id": "80134407-6f60-4c35-afa1-09b13269e409",
+      "name": "Google Vertex Chat Model2",
+      "notesInFlow": false,
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "You are an AI sales assistant. Answer customer queries, provide product information, and guide them through the sales process efficiently.\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        -12080
+      ],
+      "id": "846f67ac-385b-4c7f-85fd-4705ed3a4349",
+      "name": "AI Agent Tool2"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {
+          "maxOutputTokens": 200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        -11296
+      ],
+      "id": "5c2d6019-fe95-4c65-a4cf-c81e8008d602",
+      "name": "Google Vertex Chat Model3",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        2944,
+        -10384
+      ],
+      "id": "fdcc1e6c-dd86-490b-afce-20b5a9ca1d5c",
+      "name": "Postgres Chat Memory2",
+      "credentials": {
+        "postgres": {
+          "id": "ucP5ongZK17shTOk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3568,
+        -10832
+      ],
+      "id": "4bdc227e-0079-4f70-a440-4a0b3d798edc",
+      "name": "Structured Output Parser",
+      "retryOnFail": true,
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"type\": \"service_account\",\n  \"project_id\": \"wise-key-460919-h0\",\n  \"private_key_id\": \"058c644982c23527cf916ee48c41f110758db176\",\n  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCuZYyMYOQ016sj\\nkGoExnhpVWzZHCv4l2ap6D9byMqm9TKhQ15Rc04rJZ47hOsktiE+8SN0sGj9BSZf\\nrsc2kA1qenyWyNq5p5hEinkt4wTjXiPBU9EVTfPfIv0vPQkhe78LffP3LsxyHVjL\\nSaEob/e/0E3166tmGpd+XJrcxYKoqhu91cou3u/ViUwLLVHvLmY6Pu2X3ANkwwCH\\nWOztngKvBM29Ho16gIa1fW1xNBNrIzfF/ql/Wfy7AHvGxPxZlIeN/2n0ifoikvJe\\n3SbgFcClMo5+ayx0PUdSXJyICEu3g4YXzbs34VrdZ3CwwfZ7Px+6TU/V0XBd2Lim\\nFYXR+dSNAgMBAAECggEASzMfqVKIZN7QfXvis19vgaAj2PSkY0PJsZ8jXu0UsWyO\\noen+TCnnvYQxmGGm0YQ1jsIFM2Z0RxJG60Bex4DTQCRD//LpGeASMQ/y094N+Ara\\naR0+zax46bFZMlrjyovlI8vyfJYx800DQllkBB9P2ea1D0NJe7QgugytfGAwiJBm\\nwKti62JpoEviv9h/7k2McEA2c/Kex71mmCsaGibAnBtHMXNEBP+6oXG9MhKp4Bax\\nP9C6W7RCt4SPjqalk/UagQ47Pu6HCIayaSvjXoXgZ+cKrPzhozNySW5ej0cwsBDT\\nZZPKIXhrwmvSYQJun1b09DveHEmtASal4PyYXdi0AwKBgQDje1ryvauBgRlrblAW\\nSFzR0iRjfyc9n+qIBw5n267hdMIK3KHVZjDrkW+l3L4a1/hR10jkpqJP0pgy1hvM\\nFWcZE4Q+Fg1qLw7yopjcJPERF6vc6+wJixZoxdwDEtlmUndXEt7kyoGxKwyJ6YjR\\nnezEXOBAF1cMvelX+/1ZJqeRzwKBgQDEQoPLpSHwKiU7TJ9qxx92H+OnfJWac1Yk\\nTXSOIGzVULWypnzqAnVJDCmDHU0jcsgJC3DHgF1tRWT7dkAqqG0X5FwD2+XU4mtd\\nJcAbzVzxMhTgfO+Y0hZM+4NimIBnYhJVwrJ2ciI4A3Hx0Wliz7XB7sAiDiKK16C4\\nCUtuWxhW4wKBgQDftllr7XG0K4UXLOZf84ws4K/elZa+uP0KB354Twh+Orf1vKL+\\n3b/wexfEkwD2HzzbJ5BNJT7sp1v8aqntm4LHm3TrJf7NVTgrEBKqNT5KI/BllDKN\\n9BX2tda3wxq/0QwCOtGvSSQgWwi6vEtMcjX9qqTzAsEeC8pmN7Ags64J6wKBgQCE\\n0LqeUxc/j1X45mav/SdGalhG3SHlDw6JrL0m/byJM4By8QZx2s4CbC+fonG0fpXu\\nwQZGjJEtRJwNLL5J4AdL9udqWSMVSVD9DXIPno+6TnkgXoxKsEoVONR2Idwrmovr\\n68GYNK8BlxtCWcRm8UgAgREXOteXfEswoGGiwhUbnwKBgQCZguE82RwMEr9M0Mjl\\nVTqioqI5i1cOGIZjShgeAhAh7SWh0/4kY15sj22vVXd8ptweukkv09Ic+Z6pWE4P\\np/7hgLS2FjAtmevgMTI5W09RSnr7F7rXyJGyjIRHQklXFc1K7HsGiAO1D5O81h78\\n+pgF1ToAjRzFXdCZ/aoMhNtfNQ==\\n-----END PRIVATE KEY-----\\n\",\n  \"client_email\": \"vertex-chat-sa@wise-key-460919-h0.iam.gserviceaccount.com\",\n  \"client_id\": \"114566293335797450915\",\n  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n  \"token_uri\": \"https://oauth2.googleapis.com/token\",\n  \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/vertex-chat-sa%40wise-key-460919-h0.iam.gserviceaccount.com\",\n  \"universe_domain\": \"googleapis.com\"\n}",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3216,
+        -11264
+      ],
+      "id": "2aa30082-eff8-4a23-b0ca-31a8f9268b4f",
+      "name": "Structured Output Parser1",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -11168
+      ],
+      "id": "15a6a2d0-53d1-4cd7-bbe2-4ccbf9480768",
+      "name": "Google Vertex Chat Model4",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "An AI Sales Agent that communicates with customers, manages them, and responds appropriately based on the context of their conversation. It welcomes customers and adapts its responses to fit the customer's input.\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        3344,
+        -11056
+      ],
+      "id": "cc74c869-5fc5-4049-8ba4-dda96122f9f7",
+      "name": "AI Agent Tool3"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        2992,
+        -11248
+      ],
+      "id": "e2b928f9-c4be-4495-ac5a-e3b9bcbf01f5",
+      "name": "Postgres Chat Memory3",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "ucP5ongZK17shTOk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "Analyze the customer's message, match their communication style and tone, and provide a helpful response accordingly.\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        3088,
+        -11136
+      ],
+      "id": "d2c14d3d-d55c-4dfd-a9a9-8df3c306b24d",
+      "name": "AI Agent Tool4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        3280,
+        -9920
+      ],
+      "id": "3a6241c7-28e9-432f-8e1e-6f619d2feabc",
+      "name": "Postgres Chat Memory4",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "ucP5ongZK17shTOk",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "wise-key-460919-h0",
+          "mode": "id"
+        },
+        "options": {
+          "maxOutputTokens": 200,
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        -10912
+      ],
+      "id": "4bc5654e-7bf2-445c-90bc-f4b0efdb5370",
+      "name": "Google Vertex Chat Model5",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "WISE-KEY-460919-h0",
+          "mode": "id"
+        },
+        "options": {
+          "maxOutputTokens": 2002
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        -10864
+      ],
+      "id": "0f6a2376-3813-4d16-9029-41cc3d475863",
+      "name": "Google Vertex Chat Model6",
+      "credentials": {
+        "googleApi": {
+          "id": "waRGdtymyXHcSs5G",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "height": 80,
+        "width": 6630
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        512,
+        58880
+      ],
+      "typeVersion": 1,
+      "id": "f2511be4-cbe3-43b9-9ca2-10daf943286e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "Please analyze the —\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -352,
+        -10480
+      ],
+      "id": "b9dcbb0d-ef57-4c6e-ad90-c312de115984",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mOdAjbqVVD0WUmSY",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "claude-sonnet-4-6"
+        },
+        "text": "\"Based on the information in this document, set up the required automation workflows to integrate all devices into a single central control system using n8n. Prepare a suitable setup plan for efficient and easy management. Also, assist in fixing any bugs, publish the website, and take all necessary steps to get it live successfully. Furthermore, set up and run advertisements on YouTube, Instagram, Facebook, LinkedIn, and Google Ads to ensure ads run effectively across all these platforms.\"\n\n",
+        "documentUrls": "https://ekor39.app.n8n.cloud\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -10800
+      ],
+      "id": "905beb7e-a2dd-4d96-9b84-bb385adde381",
+      "name": "Analyze document",
+      "credentials": {
+        "anthropicApi": {
+          "id": "IlhtzF8gLDab8b4T",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-4-6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        -10528
+      ],
+      "id": "3484e570-3586-4e97-9f8e-3ae448beba8c",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "IlhtzF8gLDab8b4T",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\njavascript\nfor (const item of $input.all()) {\n let customerName = item.json.customerName || \"Valued Customer\";\n let gmail = item.json.gmail || \"Email not provided\";\n let mobileNumber = item.json.mobileNumber || \"Phone number not provided\";\n let paymentAmount = item.json.paymentAmount || 0;\n let bookingDetails = item.json.bookingDetails || \"Lead\";\n let bookingDuration = item.json.bookingDuration || \"Duration not specified\";\n \n let customerInput = (item.json.customerInput || \"\").toLowerCase();\n let serviceResponse = \"\";\n\n if (customerInput.includes(\"price\") || customerInput.includes(\"cost\") || customerInput.includes(\"rate\")) {\n serviceResponse = `Hello ${customerName}, the total amount for the ${bookingDetails} is Rs. ${paymentAmount}.`;\n } else if (customerInput.includes(\"time\") || customerInput.includes(\"duration\") || \n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -10800
+      ],
+      "id": "6c20781f-6feb-4b5a-82ce-56e4662ff714",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "🚀 All-in-One Setup": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to CRM Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to CRM Sheet": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product Knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product Knowledge": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Check Lead Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Score Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Lead Analyzer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Lead Quality": {
+      "main": [
+        [
+          {
+            "node": "Generate Personalized Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Nurturing Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Personalized Proposal": {
+      "main": [
+        [
+          {
+            "node": "Send Proposal Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Generator Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Personalized Proposal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Proposal Email": {
+      "main": [
+        [
+          {
+            "node": "Schedule Follow-up Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Follow-up Meeting": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Proposal Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - Proposal Sent": {
+      "main": [
+        [
+          {
+            "node": "Verify Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Nurturing Email": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Nurturing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Payment": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Make Voice Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Voice Call": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Payment Confirmed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Make a call",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Make a call1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Logo Image": {
+      "main": [
+        [
+          {
+            "node": "Add Logo Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Logo Text": {
+      "main": [
+        [
+          {
+            "node": "Upload Logo to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Logo to Drive": {
+      "main": [
+        [
+          {
+            "node": "Initialize Config Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚀 All-in-One Setup": {
+      "main": [
+        [
+          {
+            "node": "Create Logo Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Config Data": {
+      "main": [
+        [
+          {
+            "node": "Process Each Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Payment Accounts": {
+      "main": [
+        [
+          {
+            "node": "Process Each Payment Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize SOPs": {
+      "main": [
+        [
+          {
+            "node": "Process Each SOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store SOP Row": {
+      "main": [
+        [
+          {
+            "node": "Process Each SOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each SOP": {
+      "main": [
+        [
+          {
+            "node": "✅ Setup Complete Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store SOP Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Payment Row": {
+      "main": [
+        [
+          {
+            "node": "Process Each Payment Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Payment Account": {
+      "main": [
+        [
+          {
+            "node": "Initialize SOPs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Payment Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Config Row": {
+      "main": [
+        [
+          {
+            "node": "Process Each Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Config": {
+      "main": [
+        [
+          {
+            "node": "Initialize Payment Accounts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Config Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Lead Ads Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Each SOP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Make Voice Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish": {
+      "main": [
+        [
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Sample Products": {
+      "main": [
+        [
+          {
+            "node": "Process Each Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Chat Memory Manager1",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Generate Personalized Proposal",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post in LinkedIn": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent Tool3",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Tool3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool4": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Tool1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Tool3",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory Manager": {
+      "main": [
+        [
+          {
+            "node": "Add Sample Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Lead Analyzer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Personalized Proposal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        []
+      ]
+    },
+    "Update Sheet - Nurturing": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Verify Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory Manager1": {
+      "main": [
+        [
+          {
+            "node": "Store Payment Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "99111037-2efa-408f-a5ed-abf7dc08d211",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2072970bd4b805fc6a30f25bb65ab9148ae0f516bb4db4245ca61900a4bba006"
+  },
+  "nodeGroups": [],
+  "id": "H9C6SBxPDDB8ATvS",
+  "tags": [
+    {
+      "updatedAt": "2026-06-17T08:44:29.101Z",
+      "createdAt": "2026-06-17T08:44:29.101Z",
+      "id": "f5B2L6qidWZkbKHG",
+      "name": "f97ebdf4f0b94342b58d60f6"
+    }
+  ]
+}
